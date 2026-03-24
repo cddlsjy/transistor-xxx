@@ -28,7 +28,7 @@ jobs:
       - name: Set JAVA_HOME globally
         run: echo "JAVA_HOME=${{ steps.setup-java.outputs.path }}" >> $GITHUB_ENV
 
-      # 3. 验证 Java 版本
+      # 3. 验证 Java 版本V17
       - name: Verify Java
         run: |
           echo "JAVA_HOME: $JAVA_HOME"
