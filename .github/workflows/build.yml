@@ -1,4 +1,4 @@
-name: Build Android APK (Universal)
+name: Build Android APK
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. 设置 JDK 17
+      # 1. 设置 JDK 17，并明确保存路径
       - name: Set up JDK 17
         id: setup-java
         uses: actions/setup-java@v4
@@ -24,58 +24,40 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      # 2. 赋予 gradlew 执行权限 (重要：必须使用项目自带的 wrapper)
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      # 2. 将 JAVA_HOME 写入环境，确保所有步骤使用 JDK 17
+      - name: Set JAVA_HOME globally
+        run: echo "JAVA_HOME=${{ steps.setup-java.outputs.path }}" >> $GITHUB_ENV
 
-      # 3. 智能检测并构建 (核心改进部分)
-      - name: Detect Flavor and Build APK
-        id: build_step
+      # 3. 验证 Java 版本
+      - name: Verify Java
         run: |
-          echo "🔍 Detecting available build tasks..."
-          
-          # 获取所有任务列表并过滤出 debug 相关的 assemble 任务
-          # 我们查找是否包含 "free" (不区分大小写) 的 debug 任务
-          HAS_FREE_FLAVOR=$(./gradlew tasks --all | grep -i "assembleFreeDebug" || true)
-          
-          if [ -n "$HAS_FREE_FLAVOR" ]; then
-            echo "✅ Found 'assembleFreeDebug' task. Building with Free flavor..."
-            BUILD_TASK="assembleFreeDebug"
-          else
-            echo "⚠️ 'assembleFreeDebug' not found. Falling back to default 'assembleDebug'..."
-            BUILD_TASK="assembleDebug"
-          fi
-          
-          echo "🚀 Starting build with task: $BUILD_TASK"
-          ./gradlew $BUILD_TASK --stacktrace --no-daemon
-          
-          # 保存构建任务名供后续步骤参考（可选）
-          echo "used_task=$BUILD_TASK" >> $GITHUB_OUTPUT
+          echo "JAVA_HOME: $JAVA_HOME"
+          java -version
 
-      # 4. 查找并上传 APK
-      # 改进点：扩大搜索范围，防止因风味不同导致 APK 路径变化
+      # 4. 安装指定版本的 Gradle（例如 8.9）并缓存
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.9'   # 可改为 8.7, 8.8, 8.9 等
+
+      # 5. 使用 gradle 命令直接构建（不需要 gradlew）
+      - name: Build APK
+        run: gradle assembleDebug --stacktrace --no-daemon
+
+      # 6. 查找并上传 APK
       - name: Find and upload APK
         id: find_apk
         run: |
-          echo "📂 Searching for generated APKs..."
-          
-          # 搜索所有可能的 debug apk 路径 (包括带风味和不带风味的)
-          # 路径模式：*/outputs/apk/*/debug/*.apk 或 */outputs/apk/debug/*.apk
-          APK_PATH=$(find . -type f -name "*.apk" | grep -i "debug" | grep -v "unsigned" | head -n 1)
-          
+          APK_PATH=$(find . -path "*/outputs/apk/debug/*.apk" -print -quit)
           if [ -z "$APK_PATH" ]; then
-            echo "❌ Error: No Debug APK found after build!"
-            echo "📂 Listing all files in build/outputs:"
-            find . -path "*/build/outputs/*" -type f 2>/dev/null || echo "No outputs found."
+            echo "❌ No APK found"
+            find . -type f -name "*.apk" 2>/dev/null || true
             exit 1
           fi
-          
-          echo "✅ Found APK: $APK_PATH"
           echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-${{ steps.build_step.outputs.used_task }}
+          name: app-debug
           path: ${{ steps.find_apk.outputs.apk_path }}
-          retention-days: 7
