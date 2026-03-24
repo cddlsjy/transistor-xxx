@@ -42,7 +42,7 @@ jobs:
 
       # 5. 使用 gradle 命令直接构建（不需要 gradlew）
       - name: Build APK
-        run: gradle assembleFreeDebug --stacktrace --no-daemon
+        run: gradle assembleDebug --stacktrace --no-daemon
 
       # 6. 查找并上传 APK
       - name: Find and upload APK
