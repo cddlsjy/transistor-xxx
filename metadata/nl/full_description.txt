@@ -1,0 +1,13 @@
+Transistor is een radioapp met een minimalistische aanpak, dat ie niet per se de smaak van iedereen. Het heeft geen radiostationontdekfeature. Transistor biedt alleen een zeer eenvoudige zoekoptie en het kan audiostreamlinks importeren, als je in een webbrowser erop tikt
+
+
+VEELGESTELDE VRAGEN
+
+HOE KAN IK EEN RADIOSTATION TOEVOEGEN
+Er zijn drie manieren om een radiostation aan Transistor toe te voegen: Gebruik zoek, voeg een afspeellijstbestandadres (M3U, PLS) toe of voeg een raw-streamadres toe. Dat laatste ondersteunt niet de updatefeature.
+
+WAAR KOMEN DE RADIOSTATIONZOEKRESULTATEN VANDAAN?
+Transistor doorzoekt de online database van radio-browser.info . Je kan de community van radio-browser.info helpen door ontbrekende stations toe te voegen (http://www.radio-browser.info/gui/#!/add) aan hun database.
+
+HOE KAN IK DE LIJST MET RADIOZENDERS SAMENSTELLEN?
+Gebruik het veeggebaar om een radiostation uit de lijst te verwijderen. Verdere bewerkingsopties kunnen worden ingeschakeld in Instellingen. Als deze optie is ingeschakeld, tikt u op een radiostation en houdt u deze ingedrukt om de naam, afbeelding of streamingkoppeling te bewerken.
