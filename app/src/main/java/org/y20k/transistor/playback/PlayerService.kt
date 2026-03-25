@@ -76,7 +76,7 @@ class PlayerService : MediaBrowserServiceCompat() {
         playerState = PreferencesHelper.loadPlayerState()
         metadataHistory = PreferencesHelper.loadMetadataHistory()
         createMediaSession()
-        notificationHelper = NotificationHelper(this, mediaSession.sessionToken)
+        notificationHelper = NotificationHelper(this)
         collectionChangedReceiver = createCollectionChangedReceiver()
         LocalBroadcastManager.getInstance(application).registerReceiver(collectionChangedReceiver, IntentFilter(Keys.ACTION_COLLECTION_CHANGED))
         collection = FileHelper.readCollection(this)
@@ -185,7 +185,7 @@ class PlayerService : MediaBrowserServiceCompat() {
             isPreparing = false
             releaseWakeLock()
             handlePlaybackChange(PlaybackStateCompat.STATE_STOPPED)
-            notificationHelper.hideNotification(this)
+            stopForeground(true)
         }
     }
 
@@ -218,7 +218,6 @@ class PlayerService : MediaBrowserServiceCompat() {
         if (metadataHistory.contains(s)) metadataHistory.removeIf { it == s }
         metadataHistory.add(s)
         if (metadataHistory.size > Keys.DEFAULT_SIZE_OF_METADATA_HISTORY) metadataHistory.removeAt(0)
-        notificationHelper.updateNotification()
         PreferencesHelper.saveMetadataHistory(metadataHistory)
     }
 
@@ -227,7 +226,8 @@ class PlayerService : MediaBrowserServiceCompat() {
         collection = CollectionHelper.savePlaybackState(this, collection, station, state)
         updatePlayerState(station, state)
         if (state == PlaybackStateCompat.STATE_PLAYING) {
-            notificationHelper.showNotification(this, station, getCurrentMetadata())
+            val notification = notificationHelper.createNotification()
+            startForeground(NotificationHelper.NOTIFICATION_ID, notification)
         } else {
             updateMetadata(null)
         }
