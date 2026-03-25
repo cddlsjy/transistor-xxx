@@ -1,12 +1,3 @@
-/*
- * PlayerService.kt
- * Implements the PlayerService class
- * PlayerService is Transistor's foreground service that plays radio station audio
- *
- * Modified: Replaced ExoPlayer with Android native MediaPlayer
- * File: org.y20k.transistor.playback.PlayerService.kt
- */
-
 package org.y20k.transistor.playback
 
 import android.app.Notification
@@ -31,6 +22,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.media.MediaBrowserServiceCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.y20k.transistor.Keys
 import org.y20k.transistor.R
 import org.y20k.transistor.collection.CollectionProvider
@@ -45,7 +40,6 @@ class PlayerService : MediaBrowserServiceCompat() {
 
     private val TAG: String = LogHelper.makeLogTag(PlayerService::class.java)
 
-    // 原版变量全部保留
     private var collection: Collection = Collection()
     private var collectionProvider: CollectionProvider = CollectionProvider()
     private var station: Station = Station()
@@ -62,9 +56,6 @@ class PlayerService : MediaBrowserServiceCompat() {
     private var sleepTimerTimeRemaining: Long = 0L
     private var playbackRestartCounter: Int = 0
 
-    // ==========================================
-    // 原生 MediaPlayer 核心（完全替换 ExoPlayer）
-    // ==========================================
     private var mediaPlayer: MediaPlayer? = null
     private var currentStreamUrl: String? = null
     private var isPreparing = false
@@ -79,13 +70,13 @@ class PlayerService : MediaBrowserServiceCompat() {
 
     override fun onCreate() {
         super.onCreate()
-        userAgent = Util.getUserAgent(this, Keys.APPLICATION_NAME)
+        userAgent = "Transistor"
         modificationDate = PreferencesHelper.loadCollectionModificationDate()
         packageValidator = PackageValidator(this, R.xml.allowed_media_browser_callers)
         playerState = PreferencesHelper.loadPlayerState()
         metadataHistory = PreferencesHelper.loadMetadataHistory()
         createMediaSession()
-        notificationHelper = NotificationHelper(this, mediaSession.sessionToken, notificationListener)
+        notificationHelper = NotificationHelper(this, mediaSession.sessionToken)
         collectionChangedReceiver = createCollectionChangedReceiver()
         LocalBroadcastManager.getInstance(application).registerReceiver(collectionChangedReceiver, IntentFilter(Keys.ACTION_COLLECTION_CHANGED))
         collection = FileHelper.readCollection(this)
@@ -126,10 +117,6 @@ class PlayerService : MediaBrowserServiceCompat() {
         retryHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
-
-    // ==========================================
-    // 播放核心（MediaPlayer 实现）
-    // ==========================================
 
     private fun preparePlayback(playWhenReady: Boolean) {
         if (!station.isValid()) return
@@ -214,10 +201,6 @@ class PlayerService : MediaBrowserServiceCompat() {
         }
     }
 
-    // ==========================================
-    // 唤醒锁
-    // ==========================================
-
     private fun acquireWakeLock() {
         if (wakeLock?.isHeld == false) {
             wakeLock?.acquire(10 * 60 * 1000L)
@@ -229,10 +212,6 @@ class PlayerService : MediaBrowserServiceCompat() {
             wakeLock?.release()
         }
     }
-
-    // ==========================================
-    // 原版逻辑完全保留
-    // ==========================================
 
     private fun updateMetadata(metadata: String?) {
         val s = metadata?.takeIf { it.isNotEmpty() } ?: station.name
@@ -248,7 +227,7 @@ class PlayerService : MediaBrowserServiceCompat() {
         collection = CollectionHelper.savePlaybackState(this, collection, station, state)
         updatePlayerState(station, state)
         if (state == PlaybackStateCompat.STATE_PLAYING) {
-            notificationHelper.showNotificationForPlayer(null)
+            notificationHelper.showNotification(this, station, getCurrentMetadata())
         } else {
             updateMetadata(null)
         }
@@ -295,10 +274,6 @@ class PlayerService : MediaBrowserServiceCompat() {
         }
     }
 
-    // ==========================================
-    // 以下：原版 onGetRoot / onLoadChildren / 接收器 完全不变
-    // ==========================================
-
     override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: Bundle?): BrowserRoot {
         if (!packageValidator.isKnownCaller(clientPackageName, clientUid)) {
             return BrowserRoot(Keys.MEDIA_BROWSER_ROOT_EMPTY, null)
@@ -315,9 +290,11 @@ class PlayerService : MediaBrowserServiceCompat() {
     override fun onLoadChildren(parentId: String, result: Result<MutableList<MediaBrowserCompat.MediaItem>>) {
         if (!collectionProvider.isInitialized()) {
             result.detach()
-            collectionProvider.retrieveMedia(this, collection) {
-                if (it) loadChildren(parentId, result)
-            }
+            collectionProvider.retrieveMedia(this, collection, object : CollectionProvider.CollectionProviderCallback {
+                override fun onStationListReady(success: Boolean) {
+                    if (success) loadChildren(parentId, result)
+                }
+            })
         } else {
             loadChildren(parentId, result)
         }
@@ -338,8 +315,8 @@ class PlayerService : MediaBrowserServiceCompat() {
             override fun onReceive(context: Context, intent: Intent) {
                 val date = Date(intent.getLongExtra(Keys.EXTRA_COLLECTION_MODIFICATION_DATE, 0))
                 if (date.after(collection.modificationDate)) {
-                    CoroutineScope(Main).launch {
-                        collection = async(Dispatchers.Default) { FileHelper.readCollectionSuspended(context) }.await()
+                    GlobalScope.launch(Dispatchers.Main) {
+                        collection = FileHelper.readCollection(context)
                     }
                 }
             }
@@ -352,22 +329,7 @@ class PlayerService : MediaBrowserServiceCompat() {
         PreferencesHelper.savePlayerState(playerState)
     }
 
-    // ==========================================
-    // 通知监听器（原版完全保留）
-    // ==========================================
-
-    private val notificationListener = object : PlayerNotificationManager.NotificationListener {
-        override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
-            stopForeground(true)
-            isForegroundService = false
-            stopSelf()
-        }
-        override fun onNotificationPosted(notificationId: Int, notification: Notification, ongoing: Boolean) {
-            if (ongoing && !isForegroundService) {
-                ContextCompat.startForegroundService(applicationContext, Intent(applicationContext, this@PlayerService::class.java))
-                startForeground(Keys.NOW_PLAYING_NOTIFICATION_ID, notification)
-                isForegroundService = true
-            }
-        }
+    private fun getCurrentMetadata(): String {
+        return metadataHistory.lastOrNull() ?: station.name
     }
 }
