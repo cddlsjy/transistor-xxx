@@ -59,7 +59,7 @@ android {
 }
 
 dependencies {
-    implementation "androidx.media:media:1.7.0"
+    implementation "androidx.media:media:1.5.0"
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
