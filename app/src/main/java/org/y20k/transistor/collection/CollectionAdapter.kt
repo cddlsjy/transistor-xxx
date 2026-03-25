@@ -218,7 +218,7 @@ class CollectionAdapter(private val context: Context, private val collectionAdap
         stationViewHolder.stationImageChangeView.setOnClickListener {
             val position: Int = stationViewHolder.adapterPosition
             collectionAdapterListener.onChangeImageButtonTapped(station.uuid)
-            stationViewHolder.absoluteAdapterPosition
+            stationViewHolder.adapterPosition
             toggleEditViews(position, station.uuid)
             UiHelper.hideSoftKeyboard(context, stationViewHolder.stationNameEditView)
         }
