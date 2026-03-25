@@ -48,7 +48,8 @@ class NotificationHelper(
         val stopPi = PendingIntent.getService(context, 1, stopIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(android.R.drawable.ic_notification_media_play
+            
             .setContentTitle(station.name)
             .setContentText(metadata)
             .setContentIntent(pi)
