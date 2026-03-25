@@ -45,7 +45,7 @@ class NotificationHelper(
         val pi = PendingIntent.getActivity(service, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(service, channelId)
-            .setSmallIcon(android.R.drawable.ic_notification_media_play)
+            .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentTitle(station.name)
             .setContentText(metadata)
             .setContentIntent(pi)
