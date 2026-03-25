@@ -199,24 +199,24 @@ class CollectionAdapter(private val context: Context, private val collectionAdap
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {  }
         })
         stationViewHolder.cancelButton.setOnClickListener {
-            val position: Int = stationViewHolder.bindingAdapterPosition
+            val position: Int = stationViewHolder.adapterPosition
             toggleEditViews(position, station.uuid)
             UiHelper.hideSoftKeyboard(context, stationViewHolder.stationNameEditView)
         }
         stationViewHolder.saveButton.setOnClickListener {
-            val position: Int = stationViewHolder.bindingAdapterPosition
+            val position: Int = stationViewHolder.adapterPosition
             toggleEditViews(position, station.uuid)
             saveStation(station, position, stationViewHolder.stationNameEditView.text.toString(), stationViewHolder.stationUriEditView.text.toString())
             UiHelper.hideSoftKeyboard(context, stationViewHolder.stationNameEditView)
         }
         stationViewHolder.placeOnHomeScreenButton.setOnClickListener {
-            val position: Int = stationViewHolder.bindingAdapterPosition
+            val position: Int = stationViewHolder.adapterPosition
             ShortcutHelper.placeShortcut(context, station)
             toggleEditViews(position, station.uuid)
             UiHelper.hideSoftKeyboard(context, stationViewHolder.stationNameEditView)
         }
         stationViewHolder.stationImageChangeView.setOnClickListener {
-            val position: Int = stationViewHolder.bindingAdapterPosition
+            val position: Int = stationViewHolder.adapterPosition
             collectionAdapterListener.onChangeImageButtonTapped(station.uuid)
             stationViewHolder.absoluteAdapterPosition
             toggleEditViews(position, station.uuid)
@@ -287,7 +287,7 @@ class CollectionAdapter(private val context: Context, private val collectionAdap
         }
         stationViewHolder.stationCardView.setOnLongClickListener {
             if (editStationsEnabled) {
-                val position: Int = stationViewHolder.bindingAdapterPosition
+                val position: Int = stationViewHolder.adapterPosition
                 toggleEditViews(position, station.uuid)
                 return@setOnLongClickListener true
             } else {
