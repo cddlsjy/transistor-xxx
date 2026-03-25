@@ -7,61 +7,64 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
-import org.y20k.transistor.Keys
 import org.y20k.transistor.R
-import org.y20k.transistor.core.Station
-import org.y20k.transistor.playback.PlayerService
+import org.y20k.transistor.ui.PlayerActivity
 
-class NotificationHelper(
-    private val context: Context,
-    private val mediaSessionToken: MediaSessionCompat.Token
-) {
-    private val notificationManager: NotificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    private val channelId = "transistor_playback"
+class NotificationHelper(private val context: Context) {
 
-    init {
-        createChannel()
+    companion object {
+        private const val CHANNEL_ID = "transistor_playback_channel"
+        const val NOTIFICATION_ID = 1
     }
 
-    private fun createChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Playback",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Playback notifications"
-                setShowBadge(false)
-            }
-            notificationManager.createNotificationChannel(channel)
+    fun createNotification(): Notification {
+        createNotificationChannel()
+
+        val intent = Intent(context, PlayerActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-    }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
-    fun showNotification(service: PlayerService, station: Station, metadata: String) {
-        val intent = service.packageManager.getLaunchIntentForPackage(service.packageName)
-        val pi = PendingIntent.getActivity(service, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        // 🔴 修复在这里：使用系统图标
+        val smallIcon = android.R.drawable.ic_notification_media_play
+        val stopIcon = android.R.drawable.ic_media_stop
 
-        val notification = NotificationCompat.Builder(service, channelId)
-            .setSmallIcon(android.R.drawable.ic_notification_media_play)
-            .setContentTitle(station.name)
-            .setContentText(metadata)
-            .setContentIntent(pi)
-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(mediaSessionToken)
+        val stopIntent = Intent("com.y20k.transistor.STOP_PLAYBACK").let {
+            PendingIntent.getBroadcast(
+                context,
+                1,
+                it,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
+        }
+
+        return NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(smallIcon)
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText("Playing")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
+            .setContentIntent(pendingIntent)
+            .addAction(stopIcon, "Stop", stopIntent)
             .setOngoing(true)
             .build()
-
-        service.startForeground(Keys.NOW_PLAYING_NOTIFICATION_ID, notification)
     }
 
-    fun updateNotification() {}
-
-    fun hideNotification(service: PlayerService) {
-        notificationManager.cancel(Keys.NOW_PLAYING_NOTIFICATION_ID)
-        service.stopForeground(true)
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Playback"
+            val importance = NotificationManager.IMPORTANCE_LOW
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = "Playback notification"
+            }
+            val notificationManager = context.getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 }
