@@ -9,6 +9,8 @@ import android.content.Intent
 import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import org.y20k.transistor.Keys
 import org.y20k.transistor.R
 import org.y20k.transistor.core.Station
@@ -16,7 +18,8 @@ import org.y20k.transistor.playback.PlayerService
 
 class NotificationHelper(
     private val context: Context,
-    private val mediaSessionToken: MediaSessionCompat.Token
+    private val mediaSessionToken: MediaSessionCompat.Token,
+    private val notificationListener: PlayerNotificationManager.NotificationListener
 ) {
     private val notificationManager: NotificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -58,10 +61,13 @@ class NotificationHelper(
         service.startForeground(Keys.NOW_PLAYING_NOTIFICATION_ID, notification)
     }
 
+    fun showNotificationForPlayer(player: Player) {
+        // 这里可以实现基于 ExoPlayer 的通知逻辑
+    }
+
     fun updateNotification() {}
 
-    fun hideNotification(service: PlayerService) {
+    fun hideNotification() {
         notificationManager.cancel(Keys.NOW_PLAYING_NOTIFICATION_ID)
-        service.stopForeground(true)
     }
 }

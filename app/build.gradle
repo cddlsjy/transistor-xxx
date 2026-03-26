@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId 'org.y20k.transistor'
-        minSdkVersion 25
+        minSdkVersion 21
         targetSdkVersion 32
         versionCode 91
         versionName '4.1.1'
