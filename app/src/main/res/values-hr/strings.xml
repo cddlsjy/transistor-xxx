@@ -197,18 +197,4 @@
     <string name="dialog_edit_station_name">Ime stanice</string>
     <string name="pref_advanced_title">Napredno</string>
     <string name="descr_card_station_image_change">Promijeni sliku stanice</string>
-    <string name="pref_backup_title">Spremi stanice</string>
-    <string name="pref_restore_title">Obnovi stanice</string>
-    <string name="pref_restore_summary">Obnovi zbirku radio stanica iz sigurnosne kopije. Postojeće stanice će se zamijeniti.</string>
-    <string name="pref_backup_summary">Spremi zbirku radijskih stanica uključujući slike u spremište uređaja.</string>
-    <string name="toastmessage_restoring_collection">Obnavljanje radio stanica iz sigurnosne kopije.</string>
-    <string name="toastmessage_collection_backup">Spremanje sigurnosnih kopija radijskih stanica na:</string>
-    <string name="sample_text_steam_url" translatable="false"></string>
-    <string name="sample_text_station_metadata" translatable="false"></string>
-    <string name="player_sheet_p_no_data" translatable="false"></string>
-    <string name="onboarding_app_rodriguez_quote_2" translatable="false"></string>
-    <string name="onboarding_app_rodriguez_quote_1" translatable="false"></string>
-    <string name="sample_text_station_name" translatable="false"></string>
-    <string name="app_version_name" translatable="false"></string>
-    <string name="sample_text_sleep_timer_remaining_time" translatable="false"></string>
 </resources>

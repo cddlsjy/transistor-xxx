@@ -66,22 +66,24 @@ class RadioBrowserResultAdapter(private val listener: RadioBrowserResultAdapterL
 
     /* Overrides onBindViewHolder from RecyclerView.Adapter */
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val adapterPos = holder.adapterPosition
+        if (adapterPos == RecyclerView.NO_POSITION) return
         // get reference to ViewHolder
         val searchResultViewHolder: SearchResultViewHolder = holder as SearchResultViewHolder
-        val searchResult: RadioBrowserResult = searchResults[position]
+        val searchResult: RadioBrowserResult = searchResults[adapterPos]
         // update text
         searchResultViewHolder.nameView.text = searchResult.name
         searchResultViewHolder.streamView.text = searchResult.url
         // mark selected if necessary
-        searchResultViewHolder.searchResultLayout.isSelected = selectedPosition == position
+        searchResultViewHolder.searchResultLayout.isSelected = selectedPosition == adapterPos
         // toggle text scrolling (marquee) if necessary
-        searchResultViewHolder.nameView.isSelected = selectedPosition == position
-        searchResultViewHolder.streamView.isSelected = selectedPosition == position
+        searchResultViewHolder.nameView.isSelected = selectedPosition == adapterPos
+        searchResultViewHolder.streamView.isSelected = selectedPosition == adapterPos
         // attach touch listener
         searchResultViewHolder.searchResultLayout.setOnClickListener {
             // move marked position
             notifyItemChanged(selectedPosition)
-            selectedPosition = position
+            selectedPosition = adapterPos
             notifyItemChanged(selectedPosition)
             // hand over station
             listener.onSearchResultTapped(searchResult)

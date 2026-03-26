@@ -96,6 +96,11 @@ object Keys {
     // states
     const val STATE_SLEEP_TIMER_STOPPED: Int = 0
 
+    // connection types
+    const val CONNECTION_TYPE_HLS = 1
+    const val CONNECTION_TYPE_OTHER = 2
+    const val CONNECTION_TYPE_ERROR = 3
+
     // default const values
     const val DEFAULT_SIZE_OF_METADATA_HISTORY: Int = 25
     const val DEFAULT_MAX_LENGTH_OF_METADATA_ENTRY: Int = 127
@@ -152,10 +157,10 @@ object Keys {
     const val MIME_TYPE_ZIP = "application/zip"
     const val MIME_TYPE_OCTET_STREAM = "application/octet-stream"
     const val MIME_TYPE_UNSUPPORTED = "unsupported"
-    val MIME_TYPES_M3U = arrayOf("application/mpegurl", "application/x-mpegurl", "audio/mpegurl", "audio/x-mpegurl")
+    val MIME_TYPES_M3U = arrayOf("audio/mpegurl", "audio/x-mpegurl", "application/mpegurl", "application/x-mpegurl")
     val MIME_TYPES_PLS = arrayOf("audio/x-scpls", "application/pls+xml")
-    val MIME_TYPES_HLS = arrayOf("application/vnd.apple.mpegurl", "application/vnd.apple.mpegurl.audio")
-    val MIME_TYPES_MPEG = arrayOf("audio/mpeg")
+    val MIME_TYPES_HLS = arrayOf("application/vnd.apple.mpegurl", "application/x-mpegURL")
+    val MIME_TYPES_MPEG = arrayOf("audio/mpeg", "audio/mp3")
     val MIME_TYPES_OGG = arrayOf("audio/ogg", "application/ogg", "audio/opus")
     val MIME_TYPES_AAC = arrayOf("audio/aac", "audio/aacp")
     val MIME_TYPES_IMAGE = arrayOf("image/png", "image/jpeg")

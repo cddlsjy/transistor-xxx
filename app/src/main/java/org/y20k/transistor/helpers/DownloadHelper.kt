@@ -282,7 +282,10 @@ object DownloadHelper {
         val cursor: Cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
         if (cursor.count > 0) {
             cursor.moveToFirst()
-            remoteFileLocation = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_URI))
+            val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_URI)
+            if (columnIndex >= 0) {
+                remoteFileLocation = cursor.getString(columnIndex)
+            }
         }
         return remoteFileLocation
     }
@@ -294,7 +297,10 @@ object DownloadHelper {
         val cursor: Cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
         if (cursor.count > 0) {
             cursor.moveToFirst()
-            remoteFileLocation = cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_TITLE))
+            val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TITLE)
+            if (columnIndex >= 0) {
+                remoteFileLocation = cursor.getString(columnIndex)
+            }
         }
         return remoteFileLocation
     }
@@ -306,7 +312,10 @@ object DownloadHelper {
         val cursor: Cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
         if (cursor.count > 0) {
             cursor.moveToFirst()
-            downloadStatus = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+            val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+            if (columnIndex >= 0) {
+                downloadStatus = cursor.getInt(columnIndex)
+            }
         }
         return (downloadStatus == DownloadManager.STATUS_SUCCESSFUL)
     }
@@ -318,7 +327,10 @@ object DownloadHelper {
         val cursor: Cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
         if (cursor.count > 0) {
             cursor.moveToFirst()
-            downloadStatus = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+            val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+            if (columnIndex >= 0) {
+                downloadStatus = cursor.getInt(columnIndex)
+            }
         }
         return downloadStatus == DownloadManager.STATUS_RUNNING
     }
@@ -330,9 +342,15 @@ object DownloadHelper {
         val cursor: Cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
         if (cursor.count > 0) {
             cursor.moveToFirst()
-            val downloadStatus = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
-            if (downloadStatus == DownloadManager.STATUS_FAILED) {
-                reason = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_REASON))
+            val statusColumnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+            if (statusColumnIndex >= 0) {
+                val downloadStatus = cursor.getInt(statusColumnIndex)
+                if (downloadStatus == DownloadManager.STATUS_FAILED) {
+                    val reasonColumnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
+                    if (reasonColumnIndex >= 0) {
+                        reason = cursor.getInt(reasonColumnIndex)
+                    }
+                }
             }
         }
         return reason
