@@ -7,69 +7,94 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
-import org.y20k.transistor.Keys
 import org.y20k.transistor.R
-import org.y20k.transistor.core.Station
-import org.y20k.transistor.playback.PlayerService
+import org.y20k.transistor.ui.PlayerActivity
 
-class NotificationHelper(
-    private val context: Context,
-    private val mediaSessionToken: MediaSessionCompat.Token
-) {
-    private val notificationManager: NotificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    private val channelId = "transistor_playback"
+object NotificationHelper {
 
-    init {
-        createChannel()
+    private const val CHANNEL_ID = "transistor_playback_channel"
+    const val NOTIFICATION_ID = 1001
+
+    /**
+     * 创建播放通知
+     */
+    fun createPlaybackNotification(context: Context, stationName: String): Notification {
+        createNotificationChannel(context)
+
+        // 点击通知打开播放器
+        val intent = Intent(context, PlayerActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        // 修复：使用项目正确的图标名（替换找不到的资源）
+        val playIcon = R.drawable.ic_play_arrow
+        val stopIcon = R.drawable.ic_stop
+
+        return NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("Transistor")
+            .setContentText(stationName)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            // 修复：第64行语法错误 + 变量名错误
+            .addAction(playIcon, "Play", createPlayPendingIntent(context))
+            .addAction(stopIcon, "Stop", createStopPendingIntent(context))
+            .setStyle(NotificationCompat.MediaStyle())
+            .build()
     }
 
-    private fun createChannel() {
+    /**
+     * 创建通知渠道（Android O+ 必须）
+     */
+    private fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId,
-                "Playback",
+                CHANNEL_ID,
+                "Playback Notifications",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Playback notifications"
-                setShowBadge(false)
+                description = "Controls for radio playback"
             }
+
+            val notificationManager = context.getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
     }
 
-    fun showNotification(context: Context, station: Station, metadata: String) {
-        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-        val pi = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-
-        val stopIntent = Intent(context, PlayerService::class.java).setAction(Keys.ACTION_STOP)
-        val stopPi = PendingIntent.getService(context, 1, stopIntent, PendingIntent.FLAG_IMMUTABLE)
-
-        val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_notification_media_play
-            
-            .setContentTitle(station.name)
-            .setContentText(metadata)
-            .setContentIntent(pi)
-            .addAction(android.R.drawable.ic_media_stop, "Stop", stopPi)
-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(mediaSessionToken)
-                .setShowActionsInCompactView(0)
-            )
-            .setOngoing(true)
-            .build()
-
-        (context as PlayerService).startForeground(Keys.NOW_PLAYING_NOTIFICATION_ID, notification)
+    /**
+     * 播放/暂停 PendingIntent
+     */
+    private fun createPlayPendingIntent(context: Context): PendingIntent {
+        val intent = Intent("PLAY_PAUSE").apply {
+            setPackage(context.packageName)
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            1,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
     }
 
-    fun updateNotification() {
-        // will refresh content
-    }
-
-    fun hideNotification() {
-        notificationManager.cancel(Keys.NOW_PLAYING_NOTIFICATION_ID)
-        (context as PlayerService).stopForeground(true)
+    /**
+     * 停止 PendingIntent
+     */
+    private fun createStopPendingIntent(context: Context): PendingIntent {
+        val intent = Intent("STOP").apply {
+            setPackage(context.packageName)
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            2,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
     }
 }
